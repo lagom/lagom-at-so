@@ -98,11 +98,17 @@ object PostSoTweets {
         }
       }.toSet
 
-      println("Tweeted Stack Exchange ids:" + tweetedSeIds)
+      println("Stack exchanges questions already tweeted:" + tweetedSeIds)
       println()
 
-      // Exclude all the posts that have already been tweeted
-      val newPosts = posts.filterNot(post => tweetedSeIds.contains(post.id))
+      val minPostAge = if (tweets.nonEmpty) {
+        tweets.maxBy(_.creationDate.toEpochMilli).creationDate.minus(Duration.ofMinutes(15))
+      } else Instant.MIN
+
+      // Exclude all the posts that have already been tweeted, and also any posts that are more than 15 minutes older
+      // than the most recent tweet
+      val newPosts = posts.filterNot(post => tweetedSeIds.contains(post.id) ||
+        post.creationDate.isBefore(minPostAge))
 
       println("Tweeting:")
       newPosts.foreach(println)
